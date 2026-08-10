@@ -44,6 +44,33 @@ history.pushState({},'',href);render();
 var hash=href.split('#')[1];
 if(hash){var t=wrap.querySelector('#'+hash);if(t)t.scrollIntoView({behavior:'smooth'});}
 },true);
-render();addEventListener('popstate',render);}
+
+// The header's mobile menu and scroll state were React-driven; that JS does not
+// survive the static export, so the hamburger rendered but did nothing.
+function wireHeader(){
+var btn=wrap.querySelector('header button[aria-expanded]');
+if(!btn||btn.__w)return;btn.__w=1;
+var hdr=btn.closest('header');
+var panel=document.createElement('div');
+panel.style.cssText='display:none;background:var(--color-beige-50);border-top:1px solid rgba(138,142,150,.2)';
+var items=[['/advisory','Advisory'],['/systems','Systems'],['/research-products','Research Products'],['/work','Work'],['/about','About'],['/contact','Contact']];
+var h='<nav style="padding:16px 24px;display:flex;flex-direction:column;gap:16px">';
+for(var i=0;i<items.length;i++)h+='<a href="'+items[i][0]+'" style="font-size:1.125rem;color:var(--color-charcoal-800);text-decoration:none">'+items[i][1]+'</a>';
+h+='<a href="/contact" style="margin-top:8px;padding:12px 20px;border-radius:var(--radius-md);background:var(--color-navy-900);color:var(--color-beige-50);text-align:center;font-weight:500;text-decoration:none">Start with Advisory</a></nav>';
+panel.innerHTML=h;hdr.appendChild(panel);
+btn.addEventListener('click',function(){
+var open=panel.style.display==='none';
+panel.style.display=open?'block':'none';
+btn.setAttribute('aria-expanded',open?'true':'false');});
+panel.addEventListener('click',function(e){if(e.target.tagName==='A'){panel.style.display='none';btn.setAttribute('aria-expanded','false');}});
+// restore the frosted-on-scroll header
+var onScroll=function(){
+if(window.scrollY>16){hdr.style.background='rgba(251,248,243,.88)';hdr.style.backdropFilter='blur(12px)';hdr.style.boxShadow='0 1px 0 rgba(15,31,61,.06)';}
+else{hdr.style.background='';hdr.style.backdropFilter='';hdr.style.boxShadow='';}};
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+hdr.style.position='sticky';hdr.style.top='0';hdr.style.zIndex='40';
+hdr.style.transition='background .25s ease-out,box-shadow .25s ease-out';}
+
+var _r=render;render=function(){_r();wireHeader();};render();addEventListener('popstate',render);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
