@@ -32,16 +32,18 @@ var cur=null;
 function render(){var r=route();if(r===cur)return;cur=r;wrap.innerHTML=PAGES[r];setMeta(r);window.scrollTo(0,0);}
 // Wix only has 4 real pages, so requesting /advisory would 404 before this
 // script ever loads. Keep every internal navigation client-side instead.
-wrap.addEventListener('click',function(e){
-var a=e.target.closest&&e.target.closest('a');if(!a)return;
-var href=a.getAttribute('href')||'';
+document.addEventListener('click',function(e){
+var path=e.composedPath?e.composedPath():[];var a=null;
+for(var i=0;i<path.length;i++){if(path[i].tagName==='A'){a=path[i];break;}}
+if(!a)return;var href=a.getAttribute('href')||'';
 if(href.charAt(0)!=='/'||href.indexOf('//')===0)return;
-var path=href.split('#')[0].split('?')[0];
-if(!PAGES[(path.replace(/\/+$/,'')||'/')])return;
-e.preventDefault();history.pushState({},'',href);render();
+var p=href.split('#')[0].split('?')[0].replace(/\/+$/,'')||'/';
+if(!PAGES[p])return;
+e.preventDefault();e.stopImmediatePropagation();
+history.pushState({},'',href);render();
 var hash=href.split('#')[1];
 if(hash){var t=wrap.querySelector('#'+hash);if(t)t.scrollIntoView({behavior:'smooth'});}
-});
+},true);
 render();addEventListener('popstate',render);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
